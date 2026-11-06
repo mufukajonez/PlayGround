@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#140b1e" />
+  <meta name="description" content="The Golden Child — a 90s family game show. Four adult siblings, one foam slipper, and a truth-or-dare battle for Dad's approval." />
+  <title>The Golden Child — A 90s Family Game Show</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%91%9F%3C/text%3E%3C/svg%3E" />
+  <link rel="preload" href="./vendor/anton-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="game-root">
+    <canvas id="world" aria-label="3D living room"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header id="hud" class="hud hidden" aria-label="Scoreboard">
+      <div class="hud-top">
+        <div class="round-badge"><span>ROUND</span><strong id="roundLabel">1 / 4</strong></div>
+        <div class="dadometer"><i></i> DAD-O-METER</div>
+        <div class="hud-actions">
+          <button id="soundBtn" class="icon-btn" type="button" aria-label="Toggle sound">🔊</button>
+          <button id="helpBtn" class="icon-btn" type="button" aria-label="How to play">?</button>
+        </div>
+      </div>
+      <div id="scoreboard" class="scoreboard"></div>
+    </header>
+
+    <div id="turnBanner" class="turn-banner hidden">
+      <span class="tb-kicker" id="turnBannerKicker">NOW PLAYING</span>
+      <strong id="turnBannerName">CHAD</strong>
+    </div>
+
+    <div id="turnCard" class="turn-card hidden">
+      <span class="tc-kicker" id="turnCardKicker">BRAD PICKS</span>
+      <strong class="tc-title" id="turnCardTitle">DARE</strong>
+      <span class="tc-sub" id="turnCardSub">“Sing the theme song.”</span>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="scorePops" class="score-pops" aria-hidden="true"></div>
+
+    <section id="titleScreen" class="screen title-screen">
+      <div class="title-deco deco-one" aria-hidden="true"></div>
+      <div class="title-deco deco-two" aria-hidden="true"></div>
+      <div class="title-inner">
+        <p class="eyebrow">A 1995 FAMILY GAME SHOW</p>
+        <h1 class="logo"><span>THE</span>GOLDEN<br />CHILD</h1>
+        <p class="tagline">Four adult siblings. One foam slipper.<br />One last slice of pumpkin pie.</p>
+        <div class="title-badges" aria-hidden="true">
+          <span>3 BROTHERS</span><span>1 SISTER</span><span>1 TIRED DAD</span>
+        </div>
+        <button id="enterBtn" class="btn btn-xl btn-pink pulse" type="button">ENTER THE LIVING ROOM</button>
+        <button id="titleHelpBtn" class="btn-ghost" type="button">HOW TO PLAY</button>
+        <p class="dad-quote">“I don’t play favorites. I just keep score.” <b>— Big Lou</b></p>
+        <p class="smallprint">Sound on for maximum 90s. Best on phone or tablet.<br />All characters are adults. The slipper is foam.</p>
+      </div>
+    </section>
+
+    <section id="selectScreen" class="screen select-screen hidden">
+      <div class="select-inner">
+        <div class="select-head">
+          <p class="eyebrow">THE CONTESTANTS</p>
+          <h2 class="screen-title">PICK YOUR SIBLING</h2>
+          <p class="screen-sub">The other three compete against you. Dad does not play favorites. <em>(He does.)</em></p>
+        </div>
+        <div id="characterGrid" class="character-grid" role="list"></div>
+        <div class="select-footer">
+          <button id="startGameBtn" class="btn btn-xl btn-teal" type="button" disabled>CHOOSE A SIBLING</button>
+          <button id="backTitleBtn" class="btn-ghost" type="button">← BACK</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="choiceScreen" class="screen modal-screen hidden" aria-modal="true" role="dialog">
+      <div class="panel choice-panel">
+        <div class="panel-topline"><span id="choiceRound">ROUND 1</span><span id="choiceBadge">YOUR TURN</span></div>
+        <h2 class="panel-title">TRUTH <span>or</span> DARE?</h2>
+        <p class="panel-sub">Pick your poison, <strong id="choiceName">Chad</strong>. Dad is watching.</p>
+        <div class="choice-grid">
+          <button class="choice-card truth" data-choice="truth" type="button">
+            <span class="choice-icon">?</span>
+            <span class="choice-label">TRUTH</span>
+            <span class="choice-desc">Stare down Dad’s lie detector. Stop the needle in the sweet spot.</span>
+            <span class="choice-tag">PASS +13 · PERFECT +20</span>
+          </button>
+          <button class="choice-card dare" data-choice="dare" type="button">
+            <span class="choice-icon">!</span>
+            <span class="choice-label">DARE</span>
+            <span class="choice-desc">Mash your way through whatever Dad scribbled on a napkin.</span>
+            <span class="choice-tag">PASS +13 · PERFECT +20</span>
+          </button>
+        </div>
+        <p class="choice-quote">“I don’t play favorites. I just keep score.”</p>
+      </div>
+    </section>
+
+    <section id="challengeScreen" class="screen modal-screen challenge-screen hidden" aria-modal="true" role="dialog">
+      <div class="panel challenge-panel">
+        <div class="panel-topline light">
+          <span id="challengeType">TRUTH · LIE DETECTOR</span>
+          <span id="challengeRound">ROUND 1</span>
+        </div>
+        <h2 id="challengePrompt" class="challenge-prompt">Who put the empty milk jug back in the fridge?</h2>
+
+        <div id="truthGame" class="minigame">
+          <p class="minigame-hint">Stop the needle in the green zone.</p>
+          <div id="truthMeter" class="truth-meter">
+            <div id="truthTarget" class="truth-target"><span id="truthBull" class="truth-bull"></span></div>
+            <div id="truthNeedle" class="truth-needle"></div>
+          </div>
+          <div class="meter-labels"><span>LIE</span><span id="needleState">STEADY…</span><span>TRUTH</span></div>
+          <div class="patience" aria-hidden="true"><span id="patienceFill"></span></div>
+          <p class="patience-label">DAD’S PATIENCE</p>
+          <button id="truthStop" class="btn btn-xl btn-yellow" type="button">STOP THE NEEDLE</button>
+          <p class="hint-small">Tap the big button or press SPACE</p>
+        </div>
+
+        <div id="dareGame" class="minigame hidden">
+          <p class="minigame-hint" id="dareHint">Mash the button to survive the dare.</p>
+          <div class="dare-meter-wrap">
+            <div class="dare-meter"><span id="dareFill"></span><i id="darePerfect" class="dare-perfect"></i></div>
+            <div class="meter-labels"><span>NERVE</span><span id="tapCount">0 / 17 TAPS</span><span>LEGEND</span></div>
+          </div>
+          <button id="mashBtn" class="mash-btn" type="button">MASH!</button>
+          <p class="hint-small">Tap the button as fast as you can</p>
+          <div class="timerbar" aria-hidden="true"><span id="dareTimerFill"></span></div>
+        </div>
+
+        <div id="challengeCountdown" class="challenge-countdown hidden">READY?</div>
+        <div id="challengeVerdict" class="challenge-verdict hidden">PERFECT!</div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen modal-screen hidden" aria-modal="true" role="dialog">
+      <div class="panel result-panel">
+        <div id="resultStamp" class="stamp">APPROVED</div>
+        <div class="result-score"><span id="resultDelta">+13</span> <small>APPROVAL</small></div>
+        <h2 id="resultHeadline" class="result-headline">Dad is mildly impressed.</h2>
+        <p id="resultQuote" class="result-quote">“That’s my kid. Don’t tell the others.”</p>
+        <div class="result-meta">
+          <span id="resultMeta">Dad-o-meter: 43</span>
+          <span id="resultSlaps">SLAPS: 0</span>
+        </div>
+        <button id="nextBtn" class="btn btn-xl btn-pink" type="button">NEXT SIBLING</button>
+      </div>
+    </section>
+
+    <section id="endScreen" class="screen end-screen hidden" aria-modal="true" role="dialog">
+      <div class="end-inner">
+        <p class="eyebrow">THE RESULTS ARE IN</p>
+        <h2 id="endTitle" class="end-title">YOU ARE THE GOLDEN CHILD</h2>
+        <p id="endSub" class="end-sub">Dad nods once. That’s basically a hug.</p>
+        <div id="ranking" class="ranking"></div>
+        <div class="end-actions">
+          <button id="replayBtn" class="btn btn-teal" type="button">PLAY AGAIN</button>
+          <button id="menuBtn" class="btn-ghost light" type="button">MAIN MENU</button>
+        </div>
+        <p class="smallprint">All characters are adults. The slipper is 100% foam. No siblings were harmed.<br />Therapy not included. Ask about our holiday special.</p>
+      </div>
+    </section>
+
+    <section id="helpScreen" class="screen modal-screen hidden" aria-modal="true" role="dialog">
+      <div class="panel help-panel">
+        <div class="panel-topline"><span>HOUSE RULES</span><span>EST. 1995</span></div>
+        <h2 class="panel-title small">HOW TO WIN DAD’S LOVE</h2>
+        <div class="help-grid">
+          <div class="help-item"><b>1</b><p>Take turns with the other three siblings. Four rounds. No crying. (<em>Some crying.</em>)</p></div>
+          <div class="help-item"><b>2</b><p><strong>Truth:</strong> stop the lie-detector needle in the green zone. The smaller center zone is a perfect hit.</p></div>
+          <div class="help-item"><b>3</b><p><strong>Dare:</strong> mash the big button before time runs out. More taps = more nerve = more approval.</p></div>
+          <div class="help-item"><b>4</b><p>Fail and Dad reaches for the Slipper of Justice. It costs approval and your dignity. Highest score wins the last slice.</p></div>
+        </div>
+        <div class="help-perks">
+          <p><b>CHAD</b> starts with +8. <b>BRAD</b> gets +1 on perfects. <b>TAD</b> loses 4 less on fails. <b>STACY</b> gets bigger sweet spots.</p>
+        </div>
+        <button id="helpCloseBtn" class="btn btn-yellow" type="button">GOT IT, DAD</button>
+      </div>
+    </section>
+
+    <div id="roundBanner" class="round-banner hidden" aria-hidden="true">
+      <div class="rb-inner">
+        <div class="rb-round" id="rbRound">ROUND 1</div>
+        <div class="rb-name" id="rbName">THE WARM-UP</div>
+        <div class="rb-line" id="rbLine">Dad has finished his coffee.</div>
+      </div>
+    </div>
+
+    <div id="slapFX" class="slap-fx hidden" aria-hidden="true">
+      <div class="slap-hand">🥿</div>
+      <div class="slap-word">SMACK!</div>
+      <div class="slap-sub" id="slapSub">SLIPPER OF JUSTICE</div>
+    </div>
+    <div id="flash" class="flash" aria-hidden="true"></div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
